@@ -18,11 +18,13 @@
   "type": "module",
   "dependencies": {
     "@neondatabase/serverless": "latest",
+    "cors": "^2.8.6",
     "dotenv": "latest",
     "drizzle-orm": "latest",
     "express": "^5.2.1"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/node": "^26.0.0",
     "drizzle-kit": "latest",
