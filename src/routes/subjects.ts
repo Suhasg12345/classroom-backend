@@ -8,9 +8,20 @@ const router = express.Router();
 //Get all subjects with optional search , filtering and pagination
 router.get("/", async (req, res) => {
   try {
-    const { search, department, page = 1, limit = 10 } = req.query;
-    const currentPage = Math.max(1, +page);
-    const limitPerPage = Math.max(1, +limit);
+      const { search, department } = req.query;
+   const parsePositiveInt = (
+      value: unknown,
+      fallback: number,
+      max = Number.MAX_SAFE_INTEGER,
+    ) => {
+      const parsed =
+        typeof value === "string" ? Number.parseInt(value, 10) : NaN;
+      if (!Number.isFinite(parsed) || parsed < 1) return fallback;
+      return Math.min(parsed, max);
+    };
+
+    const currentPage = parsePositiveInt(req.query.page, 1);
+    const limitPerPage = parsePositiveInt(req.query.limit, 10, 100);
 
     const offset = (currentPage - 1) * limitPerPage;
     const filterConditions = [];
@@ -26,7 +37,10 @@ router.get("/", async (req, res) => {
     }
     //ifdepartmernt filter  exists, filter by department name using ilike for case-insensitive search
     if (department) {
-      filterConditions.push(ilike(departments.name, `%${department}%`));
+    //   filterConditions.push(ilike(departments.name, `%${department}%`));
+
+    const dataPattern=`%${String(department).replace(/[%_]/g, '\\$&')}%`;
+    filterConditions.push(ilike(departments.name, dataPattern));
     }
 
     const whereClause =
@@ -46,7 +60,8 @@ router.get("/", async (req, res) => {
       })
       .from(subjects)
       .leftJoin(departments, eq(subjects.departmentId, departments.id))
-      .where(whereClause).orderBy(desc(subjects.createdAt))
+      .where(whereClause)
+      .orderBy(desc(subjects.createdAt))
       .limit(limitPerPage)
       .offset(offset)
      
